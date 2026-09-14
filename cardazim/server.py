@@ -4,6 +4,8 @@ import sys
 ###########################################################
 ####################### YOUR CODE #########################
 ###########################################################
+from listener import Listener
+from connection import Connection
 import socket
 import struct
 import threading
@@ -12,20 +14,15 @@ def run_server(server_ip, server_port):
     Run a server in address (server_ip, server_port)
     '''
     while True:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((server_ip, server_port))
-            s.listen(1)
-            conn, addr = s.accept()
-            t = threading.Thread(target=handle_connection,args=(conn,))
-            t.start()
-            t.join()
+        with Listener(server_port,server_ip) as listener:
+            with listener.accept() as connection:
+                t = threading.Thread(target=handle_connection,args=(connection,))
+                t.start()
+                t.join()
 
-def handle_connection(conn):
-    with conn:
-        packed_data  = conn.recv(1024)
-        data_size = struct.unpack('<i',packed_data[:4])[0]
-        data = struct.unpack(f'<i{data_size}s',packed_data)[1].decode()
-        print(f'Recived data: {data}')
+def handle_connection(connection, logger=print):
+    message = connection.receive_message()
+    logger(f"Recived data: {message}")
 
             
 

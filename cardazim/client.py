@@ -1,25 +1,20 @@
 import argparse
 import sys
-
+import traceback
 ###########################################################
 ####################### YOUR CODE #########################
 ###########################################################
+from connection import Connection
 import socket
 import struct
 
-def send_data(server_ip, server_port, data):
+def send_data(server_ip, server_port, data,logger = print):
     '''
     Send data to server in address (server_ip, server_port).
     '''
-    
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((server_ip, server_port))
-        data_size = len(data)
-        bytes_data = data.encode()
-    
-        packed_data = struct.pack(f'<i{data_size}s',data_size, bytes_data)
-        print('Sending message...')
-        s.sendall(packed_data)
+    with Connection.connect(server_ip,server_port) as connection:
+        logger('Sending message...')
+        connection.send_message(data.encode())
         
 
 
@@ -48,6 +43,7 @@ def main():
         send_data(args.server_ip, args.server_port, args.data)
         print('Done.')
     except Exception as error:
+        traceback.print_exc()
         print(f'ERROR: {error}')
         return 1
 
